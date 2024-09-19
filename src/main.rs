@@ -1,3 +1,4 @@
+mod client;
 mod models;
 
 #[macro_use]
