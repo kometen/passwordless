@@ -1,40 +1,11 @@
+mod models;
+
 #[macro_use]
 extern crate rocket;
 
+use models::*;
 use passwords::{analyzer, scorer, PasswordGenerator};
 use rocket::serde::json::Json;
-use serde::{Deserialize, Serialize};
-
-use std::default::Default;
-
-#[derive(Serialize, Deserialize, Default)]
-struct PasswordOptions {
-    count: Option<usize>,
-    length: Option<usize>,
-    numbers: Option<bool>,
-    lowercase_letters: Option<bool>,
-    uppercase_letters: Option<bool>,
-    symbols: Option<bool>,
-    spaces: Option<bool>,
-    exclude_similar_characters: Option<bool>,
-    strict: Option<bool>,
-}
-
-impl PasswordOptions {
-    fn new(count: usize, length: usize) -> PasswordOptions {
-        PasswordOptions {
-            count: Some(count),
-            length: Some(length),
-            ..Default::default()
-        }
-    }
-}
-
-#[derive(Serialize)]
-struct Pwd {
-    password: String,
-    score: u8,
-}
 
 #[get("/pwd")]
 fn get_pwd() -> Json<Vec<Pwd>> {

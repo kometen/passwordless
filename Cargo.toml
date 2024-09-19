@@ -7,3 +7,4 @@ edition = "2021"
 rocket = { version = "0.5.1", features = ["json"] }
 passwords = "3.1.16"
 serde = { version = "1.0.208", features = ["derive"] }
+dotenv = "0.15.0"
