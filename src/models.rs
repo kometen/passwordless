@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::default::Default;
 
 #[derive(Serialize, Deserialize, Default)]
-pub struct PasswordOptions {
+pub(crate) struct PasswordOptions {
     pub count: Option<usize>,
     pub length: Option<usize>,
     pub numbers: Option<bool>,
@@ -25,7 +25,7 @@ impl PasswordOptions {
 }
 
 #[derive(Serialize)]
-pub struct Pwd {
+pub(crate) struct Pwd {
     pub password: String,
     pub score: u8,
 }
