@@ -4,10 +4,12 @@ mod utils;
 
 #[macro_use]
 extern crate rocket;
+extern crate dotenv;
 
 use client::PasswordlessClient;
+use dotenv::dotenv;
 use models::{PasswordOptions, Pwd, RegisterRequest, SignInVerifyRequest};
-use rocket::{serde::json::Json, State};
+use rocket::{fs::FileServer, serde::json::Json, State};
 use rocket_dyn_templates::{context, Template};
 use serde_json::{json, Value};
 use utils::generate_passwords;
@@ -61,5 +63,16 @@ pub fn index() -> Template {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![get_pwd, pwd_count, post_pwd])
+    dotenv().ok();
+
+    let client = PasswordlessClient::new(
+        &std::env::var("PASSWORDLESS_API_SECRET").expect("PASSWORDLESS_API_SECRET must be set."),
+        &std::env::var("PASSWORDLESS_API_URL").expect("PASSWORDLESS_API_URL must be set."),
+    );
+
+    rocket::build()
+        .mount("/", routes![get_pwd, index, pwd_count, post_pwd])
+        .mount("/static", FileServer::from("src/static"))
+        .manage(client)
+        .attach(Template::fairing())
 }
