@@ -72,6 +72,7 @@ fn rocket() -> _ {
 
     rocket::build()
         .mount("/", routes![get_pwd, index, pwd_count, post_pwd])
+        .mount("/passwordless/api", routes![register, login])
         .mount("/static", FileServer::from("src/static"))
         .manage(client)
         .attach(Template::fairing())
