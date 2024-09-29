@@ -5,8 +5,11 @@ mod utils;
 #[macro_use]
 extern crate rocket;
 
-use models::{PasswordOptions, Pwd};
-use rocket::serde::json::Json;
+use client::PasswordlessClient;
+use models::{PasswordOptions, Pwd, RegisterRequest, SignInVerifyRequest};
+use rocket::{serde::json::Json, State};
+use rocket_dyn_templates::{context, Template};
+use serde_json::{json, Value};
 use utils::generate_passwords;
 
 #[get("/pwd")]
@@ -24,6 +27,36 @@ fn pwd_count(count: usize) -> Json<Vec<Pwd>> {
 #[post("/pwd", data = "<password_options>")]
 fn post_pwd(password_options: Json<PasswordOptions>) -> Json<Vec<Pwd>> {
     generate_passwords(&password_options)
+}
+
+#[post("/register", format = "json", data = "<data>")]
+pub async fn register(client: &State<PasswordlessClient>, data: Json<Value>) -> Value {
+    let register_options = RegisterRequest {
+        user_id: data.get("userId").unwrap().to_string(),
+        username: data.get("username").unwrap().to_string(),
+        display_name: data.get("username").unwrap().to_string(),
+    };
+
+    let token = client.register_token(&register_options).await.unwrap();
+    json!(token)
+}
+
+#[post("/login", format = "json", data = "<data>")]
+pub async fn login(client: &State<PasswordlessClient>, data: Json<SignInVerifyRequest>) -> Value {
+    let response = client.sign_in(&data).await.unwrap();
+    json!(response)
+}
+
+#[get("/")]
+pub fn index() -> Template {
+    let passwordless_api_key =
+        &std::env::var("PASSWORDLESS_API_KEY").expect("PASSWORDLESS_API_KEY must be set.");
+    let passwordless_api_url =
+        &std::env::var("PASSWORDLESS_API_URL").expect("PASSWORDLESS_API_URL must be set.");
+    Template::render(
+        "index",
+        context! { passwordless_api_url: passwordless_api_url, passwordless_api_key: passwordless_api_key  },
+    )
 }
 
 #[launch]
