@@ -1,5 +1,6 @@
 mod client;
 mod models;
+mod tests;
 mod utils;
 
 #[macro_use]

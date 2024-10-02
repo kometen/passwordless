@@ -24,7 +24,7 @@ impl PasswordOptions {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub(crate) struct Pwd {
     pub password: String,
     pub score: u8,
