@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 rocket = { version = "0.5.1", features = ["json", "tls"] }
-rocket_dyn_templates = { version = "0.1.0", features = ["tera"] }
+rocket_dyn_templates = { version = "0.2.0", features = ["tera"] }
 passwords = "3.1.16"
-serde = { version = "1.0.208", features = ["derive"] }
+serde = { version = "1.0.218", features = ["derive"] }
 dotenv = "0.15.0"
-reqwest = { version = "0.12.7", features = ["json"] }
-serde_json = "1.0.128"
+reqwest = { version = "0.12.12", features = ["json"] }
+serde_json = "1.0.139"

@@ -31,14 +31,14 @@ async function handleRegisterClick(e) {
     body: JSON.stringify(signupData),
   });
 
-  const backendResponse = await response.json();
-
   if (!response.ok) {
     // If our demo backend did not respond with success, show error in UI
-    Status(backendResponse);
-    Status("Our backend failed while creating a token: ");
-    return;
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Registration failed");
   }
+
+  const backendResponse = await response.json();
+  console.log("Registration successful:", backendResponse);
 
   /**
    *  Register a key - The Passwordless API and browser creates and stores a passkey, based on the token.

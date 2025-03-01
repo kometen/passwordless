@@ -10,7 +10,7 @@ extern crate dotenv;
 use client::PasswordlessClient;
 use dotenv::dotenv;
 use models::{PasswordOptions, Pwd, RegisterRequest, SignInVerifyRequest};
-use rocket::{fs::FileServer, serde::json::Json, State};
+use rocket::{fs::FileServer, http::Status, response::status::Custom, serde::json::Json, State};
 use rocket_dyn_templates::{context, Template};
 use serde_json::{json, Value};
 use utils::generate_passwords;
@@ -33,15 +33,81 @@ fn post_pwd(password_options: Json<PasswordOptions>) -> Json<Vec<Pwd>> {
 }
 
 #[post("/register", format = "json", data = "<data>")]
-pub async fn register(client: &State<PasswordlessClient>, data: Json<Value>) -> Value {
-    let register_options = RegisterRequest {
-        user_id: data.get("userId").unwrap().to_string(),
-        username: data.get("username").unwrap().to_string(),
-        display_name: data.get("username").unwrap().to_string(),
+pub async fn register(
+    client: &State<PasswordlessClient>,
+    data: Json<Value>,
+) -> Result<Value, Custom<Value>> {
+    let user_id = match data.get("userId") {
+        Some(val) => match val.as_str() {
+            Some(s) => s.to_string(),
+            None => {
+                return Err(Custom(
+                    Status::BadRequest,
+                    json!({"error": "userId must be a string"}),
+                ))
+            }
+        },
+        None => {
+            return Err(Custom(
+                Status::BadRequest,
+                json!({"error": "userId is required"}),
+            ))
+        }
     };
 
-    let token = client.register_token(&register_options).await.unwrap();
-    json!(token)
+    let username = match data.get("username") {
+        Some(val) => match val.as_str() {
+            Some(s) => s.to_string(),
+            None => {
+                return Err(Custom(
+                    Status::BadRequest,
+                    json!({"error": "username must be a string"}),
+                ))
+            }
+        },
+        None => {
+            return Err(Custom(
+                Status::BadRequest,
+                json!({"error": "username is required"}),
+            ))
+        }
+    };
+
+    let display_name = match data.get("alias") {
+        Some(val) => match val.as_str() {
+            Some(s) => s.to_string(),
+            None => {
+                return Err(Custom(
+                    Status::BadRequest,
+                    json!({"error": "alias must be a string"}),
+                ))
+            }
+        },
+        None => {
+            return Err(Custom(
+                Status::BadRequest,
+                json!({"error": "alias is required"}),
+            ))
+        }
+    };
+
+    let register_options = RegisterRequest {
+        user_id,
+        username,
+        display_name,
+    };
+    println!(
+        "user_id: {}, username: {}, display_name: {}",
+        register_options.user_id, register_options.username, register_options.display_name
+    );
+
+    match client.register_token(&register_options).await {
+        Ok(token) => Ok(json!(token)),
+        Err(e) => Err(Custom(
+            Status::InternalServerError,
+            json!({ "error": e.to_string() }),
+        )),
+    }
 }
 
 #[post("/login", format = "json", data = "<data>")]
