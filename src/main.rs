@@ -15,6 +15,22 @@ use rocket_dyn_templates::{context, Template};
 use serde_json::{json, Value};
 use utils::generate_passwords;
 
+fn extract_string_field(data: &Value, field: &str) -> Result<String, Custom<Value>> {
+    match data.get(field) {
+        Some(val) => match val.as_str() {
+            Some(s) => Ok(s.to_string()),
+            None => Err(Custom(
+                Status::BadRequest,
+                json!({"error": format!("{} must be a string", field)}),
+            )),
+        },
+        None => Err(Custom(
+            Status::BadRequest,
+            json!({"error": format!("{} is required", field)}),
+        )),
+    }
+}
+
 #[get("/pwd")]
 fn get_pwd() -> Json<Vec<Pwd>> {
     generate_passwords(&PasswordOptions::new(5, 20))
@@ -37,65 +53,16 @@ pub async fn register(
     client: &State<PasswordlessClient>,
     data: Json<Value>,
 ) -> Result<Value, Custom<Value>> {
-    let user_id = match data.get("userId") {
-        Some(val) => match val.as_str() {
-            Some(s) => s.to_string(),
-            None => {
-                return Err(Custom(
-                    Status::BadRequest,
-                    json!({"error": "userId must be a string"}),
-                ))
-            }
-        },
-        None => {
-            return Err(Custom(
-                Status::BadRequest,
-                json!({"error": "userId is required"}),
-            ))
-        }
-    };
-
-    let username = match data.get("username") {
-        Some(val) => match val.as_str() {
-            Some(s) => s.to_string(),
-            None => {
-                return Err(Custom(
-                    Status::BadRequest,
-                    json!({"error": "username must be a string"}),
-                ))
-            }
-        },
-        None => {
-            return Err(Custom(
-                Status::BadRequest,
-                json!({"error": "username is required"}),
-            ))
-        }
-    };
-
-    let display_name = match data.get("alias") {
-        Some(val) => match val.as_str() {
-            Some(s) => s.to_string(),
-            None => {
-                return Err(Custom(
-                    Status::BadRequest,
-                    json!({"error": "alias must be a string"}),
-                ))
-            }
-        },
-        None => {
-            return Err(Custom(
-                Status::BadRequest,
-                json!({"error": "alias is required"}),
-            ))
-        }
-    };
+    let user_id = extract_string_field(&data, "userId")?;
+    let username = extract_string_field(&data, "username")?;
+    let display_name = extract_string_field(&data, "alias")?;
 
     let register_options = RegisterRequest {
         user_id,
         username,
         display_name,
     };
+
     println!(
         "user_id: {}, username: {}, display_name: {}",
         register_options.user_id, register_options.username, register_options.display_name
